@@ -5,7 +5,7 @@
   "description": "A personal inbox dashboard with advanced search, saved filters, analytics, and CSV/JSON export.",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
