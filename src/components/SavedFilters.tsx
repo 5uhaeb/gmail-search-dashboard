@@ -23,7 +23,7 @@ interface Props {
   currentFilters: SearchFilters;
   currentQuery: string;
   onApply: (f: SearchFilters) => void;
-  refreshToken: number;   // bump to force refetch
+  refreshToken: number;
 }
 
 export default function SavedFilters({
@@ -96,8 +96,8 @@ export default function SavedFilters({
   };
 
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-      <div className="flex items-center gap-1 px-2 pt-2">
+    <div className="card p-3">
+      <div className="mb-3 flex items-center gap-3 border-b-cartoon-thin border-ink">
         <TabBtn active={tab === "saved"} onClick={() => setTab("saved")}>
           Saved ({saved.length})
         </TabBtn>
@@ -107,14 +107,14 @@ export default function SavedFilters({
       </div>
 
       {tab === "saved" && (
-        <div className="p-3 space-y-3">
+        <div className="space-y-3">
           <div className="flex gap-2">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name this search…"
-              className="flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              placeholder="Name this search..."
+              className="input min-w-0 flex-1 py-1.5 text-sm"
               onKeyDown={(e) => {
                 if (e.key === "Enter") addSaved();
               }}
@@ -123,41 +123,34 @@ export default function SavedFilters({
               type="button"
               onClick={addSaved}
               disabled={!name.trim() || loading}
-              className="px-3 py-1.5 rounded-md bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm"
+              className="btn-primary px-3 py-1.5 text-sm"
             >
               Save
             </button>
           </div>
-          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto scroll-area -mx-3">
+          {error && <p className="text-xs font-semibold text-accent-red">{error}</p>}
+          <ul className="scroll-area max-h-80 space-y-2 overflow-y-auto pr-1">
             {saved.map((s) => (
-              <li
-                key={s.id}
-                className="group flex items-start gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              >
-                <button
-                  type="button"
-                  onClick={() => onApply(s.filters)}
-                  className="flex-1 min-w-0 text-left"
-                >
-                  <div className="text-sm font-medium truncate">{s.name}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">
-                    {s.query || "(empty query)"}
-                  </div>
+              <li key={s.id} className="row-item flex items-start gap-2 p-2">
+                <button type="button" onClick={() => onApply(s.filters)} className="min-w-0 flex-1 text-left">
+                  <div className="truncate text-sm font-semibold">{s.name}</div>
+                  <div className="truncate font-mono text-xs text-ink-mute">{s.query || "(empty query)"}</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => removeSaved(s.id)}
-                  className="opacity-60 hover:opacity-100 text-xs text-red-600 dark:text-red-400"
+                  className="btn h-7 w-7 rounded-full p-0 text-accent-red"
                   title="Delete"
+                  aria-label="Delete saved search"
                 >
-                  ✕
+                  <CloseIcon />
                 </button>
               </li>
             ))}
             {saved.length === 0 && (
-              <li className="px-3 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                No saved searches yet. Configure filters and save them for one-click reuse.
+              <li className="panel px-3 py-8 text-center text-xs text-ink-mute">
+                <FolderIcon />
+                <p className="mt-2 font-semibold">No saved searches yet</p>
               </li>
             )}
           </ul>
@@ -165,43 +158,28 @@ export default function SavedFilters({
       )}
 
       {tab === "history" && (
-        <div className="p-3 space-y-2">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Your last 50 searches.</p>
+            <p className="text-xs font-medium text-ink-mute">Your last 50 searches.</p>
             {history.length > 0 && (
-              <button
-                type="button"
-                onClick={clearHistory}
-                className="text-xs text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-              >
+              <button type="button" onClick={clearHistory} className="chip text-accent-red">
                 Clear all
               </button>
             )}
           </div>
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto scroll-area -mx-3">
+          <ul className="scroll-area max-h-80 space-y-2 overflow-y-auto pr-1">
             {history.map((h) => (
-              <li
-                key={h.id}
-                className="px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              >
-                <button
-                  type="button"
-                  onClick={() => onApply(h.filters)}
-                  className="w-full text-left"
-                >
-                  <div className="text-xs font-mono truncate text-slate-700 dark:text-slate-300">
-                    {h.query}
-                  </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
-                    {new Date(h.createdAt).toLocaleString()} · ~{h.resultCnt} results
+              <li key={h.id} className="row-item p-2">
+                <button type="button" onClick={() => onApply(h.filters)} className="w-full text-left">
+                  <div className="truncate font-mono text-xs text-ink">{h.query}</div>
+                  <div className="mt-0.5 text-[10px] text-ink-mute">
+                    {new Date(h.createdAt).toLocaleString()} / ~{h.resultCnt} results
                   </div>
                 </button>
               </li>
             ))}
             {history.length === 0 && (
-              <li className="px-3 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                History will appear here.
-              </li>
+              <li className="panel px-3 py-6 text-center text-xs font-medium text-ink-mute">History will appear here.</li>
             )}
           </ul>
         </div>
@@ -224,13 +202,30 @@ function TabBtn({
       type="button"
       onClick={onClick}
       className={
-        "px-3 py-1.5 text-xs font-medium rounded-t-md transition " +
+        "border-b-[3px] px-1 pb-2 text-xs transition " +
         (active
-          ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100")
+          ? "border-accent-red font-semibold text-ink"
+          : "border-transparent font-medium text-ink-mute hover:text-ink")
       }
     >
       {children}
     </button>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FolderIcon() {
+  return (
+    <svg className="mx-auto h-14 w-14 text-ink" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <path d="M8 18h18l5 6h25v28H8V18Z" fill="var(--surface-2)" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M8 28h48" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
   );
 }

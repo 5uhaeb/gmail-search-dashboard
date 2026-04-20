@@ -10,7 +10,7 @@ const DATE_OPTIONS: Array<{ value: DateRangePreset; label: string }> = [
   { value: "last_30_days", label: "Last 30 days" },
   { value: "this_month", label: "This month" },
   { value: "last_month", label: "Last month" },
-  { value: "custom", label: "Custom range…" },
+  { value: "custom", label: "Custom range..." },
 ];
 
 interface Props {
@@ -18,23 +18,16 @@ interface Props {
   onChange: (f: SearchFilters) => void;
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</span>
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-ink-mute">
+        {label}
+      </span>
       {children}
     </label>
   );
 }
-
-const inputCls =
-  "w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500";
 
 export default function FilterPanel({ filters, onChange }: Props) {
   const set = <K extends keyof SearchFilters>(k: K, v: SearchFilters[K]) => {
@@ -42,15 +35,17 @@ export default function FilterPanel({ filters, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="panel space-y-4 p-4">
+      <h2 className="text-sm font-semibold">Advanced Filters</h2>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="From">
           <input
             type="text"
             value={filters.from ?? ""}
             onChange={(e) => set("from", e.target.value)}
             placeholder="sender@example.com"
-            className={inputCls}
+            className="input w-full"
           />
         </Field>
         <Field label="To">
@@ -59,7 +54,7 @@ export default function FilterPanel({ filters, onChange }: Props) {
             value={filters.to ?? ""}
             onChange={(e) => set("to", e.target.value)}
             placeholder="recipient@example.com"
-            className={inputCls}
+            className="input w-full"
           />
         </Field>
         <Field label="Subject">
@@ -67,8 +62,8 @@ export default function FilterPanel({ filters, onChange }: Props) {
             type="text"
             value={filters.subject ?? ""}
             onChange={(e) => set("subject", e.target.value)}
-            placeholder="Subject contains…"
-            className={inputCls}
+            placeholder="Subject contains..."
+            className="input w-full"
           />
         </Field>
         <Field label="Label">
@@ -77,20 +72,22 @@ export default function FilterPanel({ filters, onChange }: Props) {
             value={filters.label ?? ""}
             onChange={(e) => set("label", e.target.value)}
             placeholder="e.g. Important, work, starred"
-            className={inputCls}
+            className="input w-full"
           />
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Date range">
           <select
             value={filters.datePreset ?? "any"}
             onChange={(e) => set("datePreset", e.target.value as DateRangePreset)}
-            className={inputCls}
+            className="select w-full"
           >
             {DATE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </Field>
@@ -98,7 +95,7 @@ export default function FilterPanel({ filters, onChange }: Props) {
           <select
             value={filters.viewMode ?? "messages"}
             onChange={(e) => set("viewMode", e.target.value as "messages" | "threads")}
-            className={inputCls}
+            className="select w-full"
           >
             <option value="messages">Messages</option>
             <option value="threads">Threads</option>
@@ -107,37 +104,29 @@ export default function FilterPanel({ filters, onChange }: Props) {
       </div>
 
       {filters.datePreset === "custom" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="After (YYYY-MM-DD)">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="After">
             <input
               type="date"
               value={filters.customAfter ?? ""}
               onChange={(e) => set("customAfter", e.target.value)}
-              className={inputCls}
+              className="input w-full"
             />
           </Field>
-          <Field label="Before (YYYY-MM-DD, inclusive)">
+          <Field label="Before">
             <input
               type="date"
               value={filters.customBefore ?? ""}
               onChange={(e) => set("customBefore", e.target.value)}
-              className={inputCls}
+              className="input w-full"
             />
           </Field>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-        <Checkbox
-          label="Has attachment"
-          checked={!!filters.hasAttachment}
-          onChange={(v) => set("hasAttachment", v)}
-        />
-        <Checkbox
-          label="Starred"
-          checked={!!filters.isStarred}
-          onChange={(v) => set("isStarred", v)}
-        />
+      <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
+        <Checkbox label="Has attachment" checked={!!filters.hasAttachment} onChange={(v) => set("hasAttachment", v)} />
+        <Checkbox label="Starred" checked={!!filters.isStarred} onChange={(v) => set("isStarred", v)} />
         <Checkbox
           label="Unread only"
           checked={!!filters.isUnread}
@@ -154,20 +143,20 @@ export default function FilterPanel({ filters, onChange }: Props) {
         />
       </div>
 
-      <Field label="Advanced: raw Gmail query (merged with above)">
+      <Field label="Advanced raw Gmail query">
         <input
           type="text"
           value={filters.rawQuery ?? ""}
           onChange={(e) => set("rawQuery", e.target.value)}
           placeholder='e.g. category:promotions -"unsubscribe"'
-          className={inputCls + " font-mono"}
+          className="input w-full font-mono"
         />
       </Field>
     </div>
   );
 }
 
-function Checkbox({
+export function Checkbox({
   label,
   checked,
   onChange,
@@ -177,14 +166,25 @@ function Checkbox({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-2 select-none cursor-pointer">
+    <label className="inline-flex cursor-pointer select-none items-center gap-2 text-ink">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+        className="peer sr-only"
       />
-      <span className="text-slate-700 dark:text-slate-300">{label}</span>
+      <span className="checkbox peer-checked:bg-accent-yellow">
+        {checked && <CheckIcon />}
+      </span>
+      <span className="font-medium">{label}</span>
     </label>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 8.2 6.3 11 13 4.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

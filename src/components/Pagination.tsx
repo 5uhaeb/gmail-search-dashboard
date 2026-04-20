@@ -24,34 +24,28 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
       <div className="flex items-center gap-2">
-        <span className="text-slate-500 dark:text-slate-400">Per page:</span>
+        <span className="font-medium text-ink-mute">Per page:</span>
         <select
           value={pageSize}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="input py-1 pl-2 pr-7 text-xs"
         >
           {[10, 25, 50, 100].map((n) => (
-            <option key={n} value={n}>{n}</option>
+            <option key={n} value={n}>
+              {n}
+            </option>
           ))}
         </select>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={disabled || !hasPrev}
-          className="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
-        >
-          ← Prev
+        <button type="button" onClick={onPrev} disabled={disabled || !hasPrev} className="btn px-2.5 py-1 text-xs">
+          <span aria-hidden="true">←</span>
+          Prev
         </button>
-        <span className="text-slate-500 dark:text-slate-400 tabular-nums">Page {page}</span>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={disabled || !hasNext}
-          className="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40"
-        >
-          Next →
+        <span className="font-mono text-ink-mute tabular-nums">Page {page}</span>
+        <button type="button" onClick={onNext} disabled={disabled || !hasNext} className="btn px-2.5 py-1 text-xs">
+          Next
+          <span aria-hidden="true">→</span>
         </button>
       </div>
     </div>

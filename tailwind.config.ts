@@ -9,29 +9,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+        bg: "var(--bg)",
+        surface: "var(--surface)",
+        "surface-2": "var(--surface-2)",
+        ink: "var(--ink)",
+        "ink-mute": "var(--ink-mute)",
+        accent: {
+          red: "var(--red)",
+          blue: "var(--blue)",
+          yellow: "var(--yellow)",
+          green: "var(--green)",
         },
       },
+      boxShadow: {
+        cartoon: "5px 5px 0 0 var(--ink)",
+        "cartoon-sm": "2px 2px 0 0 var(--ink)",
+        "cartoon-md": "4px 4px 0 0 var(--ink)",
+        "cartoon-lg": "6px 6px 0 0 var(--ink)",
+        "cartoon-pressed": "1px 1px 0 0 var(--ink)",
+      },
+      borderWidth: {
+        cartoon: "2.5px",
+        "cartoon-thin": "2px",
+      },
       fontFamily: {
-        sans: [
-          "ui-sans-serif",
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "Inter",
-          "sans-serif",
-        ],
+        sans: ["var(--font-space-grotesk)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
     },
   },

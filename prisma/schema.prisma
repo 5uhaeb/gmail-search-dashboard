@@ -1,13 +1,12 @@
-// Prisma schema for Gmail Search Dashboard
-// Using SQLite for zero-config local dev. To use Postgres, change `provider`
-// to "postgresql" and update DATABASE_URL in .env.
+// Prisma schema for MailBoard
+// Uses PostgreSQL in production (for example Vercel + Neon).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

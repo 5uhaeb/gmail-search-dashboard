@@ -46,21 +46,30 @@ export default function ExportButtons({
         type="button"
         onClick={() => doExport("csv")}
         disabled={disabled || busy !== null}
-        className="px-2.5 py-1.5 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60"
+        className="btn px-2.5 py-1.5 text-[13px]"
         title="Export up to 800 matching messages (current filters) to CSV"
       >
-        {busy === "csv" ? "Exporting…" : "Export CSV"}
+        {busy === "csv" ? <Spinner /> : "Export CSV"}
       </button>
       <button
         type="button"
         onClick={() => doExport("json")}
         disabled={disabled || busy !== null}
-        className="px-2.5 py-1.5 text-xs rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60"
+        className="btn px-2.5 py-1.5 text-[13px]"
         title="Export up to 800 matching messages (current filters) to JSON"
       >
-        {busy === "json" ? "Exporting…" : "Export JSON"}
+        {busy === "json" ? <Spinner /> : "Export JSON"}
       </button>
-      {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
+      {error && <span className="text-xs font-semibold text-accent-red">{error}</span>}
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.3" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
   );
 }

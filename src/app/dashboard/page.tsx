@@ -49,7 +49,7 @@ export default function DashboardPage() {
 
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selected, setSelected] = useState<ParsedMessage | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showRightPanel, setShowRightPanel] = useState(true);
 
   const [loading, setLoading] = useState(false);
@@ -166,8 +166,7 @@ export default function DashboardPage() {
     setFilters(merged);
     setPage(1);
     setTokenStack([undefined]);
-    // Kick off a search with the *new* filters immediately — don't wait for
-    // React to re-render, which would otherwise capture the stale closure.
+    // Kick off a search with the new filters immediately.
     runSearchWith(merged, pageSize, { resetPage: true });
   };
 
@@ -184,22 +183,23 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">Loading your session…</p>
+      <main className="flex min-h-screen items-center justify-center bg-bg text-ink">
+        <p className="card-sm px-4 py-3 text-sm font-semibold text-ink-mute">Loading your session...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      {/* Top nav */}
-      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center gap-3">
+    <main className="min-h-screen bg-bg text-ink">
+      <header className="sticky top-0 z-20 border-b-cartoon-thin border-ink bg-bg">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-sm">G</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-[8px] border-cartoon-thin border-ink bg-accent-red text-sm font-bold text-white shadow-cartoon-sm dark:text-bg">
+              M
+            </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">Gmail Search Dashboard</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[14rem]">
+              <div className="text-sm font-semibold">MailBoard</div>
+              <div className="max-w-[14rem] truncate text-[10px] font-semibold text-ink-mute">
                 {session?.user?.email}
               </div>
             </div>
@@ -209,26 +209,21 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setShowRightPanel((v) => !v)}
-            className="hidden lg:inline-flex px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="btn hidden px-2.5 py-1.5 text-xs lg:inline-flex"
             title="Toggle side panel"
           >
             {showRightPanel ? "Hide panel" : "Show panel"}
           </button>
           <ThemeToggle />
-          <button
-            type="button"
-            onClick={signOutNow}
-            className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
+          <button type="button" onClick={signOutNow} className="btn px-2.5 py-1.5 text-xs">
             Sign out
           </button>
         </div>
       </header>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
-        {/* Main column */}
-        <div className="space-y-4 min-w-0">
-          <section className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-[1fr_340px]">
+        <div className="min-w-0 space-y-4">
+          <section className="card space-y-4 p-4">
             <SearchBar
               value={currentKeywords}
               onChange={(v) => setFilters({ ...filters, keywords: v })}
@@ -247,36 +242,31 @@ export default function DashboardPage() {
                 }}
               />
               <div className="ml-auto">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvanced((v) => !v)}
-                  className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                >
-                  {showAdvanced ? "▾ Hide advanced filters" : "▸ Show advanced filters"}
+                <button type="button" onClick={() => setShowAdvanced((v) => !v)} className="chip">
+                  {showAdvanced ? "Hide advanced filters" : "Show advanced filters"}
                 </button>
               </div>
             </div>
 
-            {showAdvanced && (
-              <FilterPanel filters={filters} onChange={setFilters} />
-            )}
+            {showAdvanced && <FilterPanel filters={filters} onChange={setFilters} />}
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-full">
-                <span className="opacity-60">q:</span> {query || "(none)"}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t-cartoon-thin border-ink pt-2">
+              <div className="panel max-w-full truncate px-3 py-2 text-xs text-ink-mute">
+                <span className="font-mono font-semibold text-ink">q:</span>{" "}
+                <span className="font-mono">{query || "(none)"}</span>
               </div>
               <ExportButtons filters={filters} disabled={!query.trim()} />
             </div>
           </section>
 
           {error && (
-            <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300">
+            <div className="card-sm border-accent-red bg-[#ffecec] p-3 text-sm font-semibold text-accent-red dark:bg-[#3a1f1f]">
               {error}
             </div>
           )}
 
           <section className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between gap-3 text-xs font-medium text-ink-mute">
               <span>{pageHint}</span>
               <Pagination
                 page={page}
@@ -314,23 +304,22 @@ export default function DashboardPage() {
           </section>
         </div>
 
-        {/* Right panel */}
         {showRightPanel && (
-          <aside className="space-y-4">
+          <aside className="min-w-0 space-y-4">
             <SavedFilters
               currentFilters={filters}
               currentQuery={query}
               onApply={applyFiltersAndSearch}
               refreshToken={savedRefresh}
             />
-            <Analytics
-              messages={messages}
-              domains={domains}
-              savedKeywords={savedKeywords}
-            />
+            <Analytics messages={messages} domains={domains} savedKeywords={savedKeywords} />
           </aside>
         )}
       </div>
+
+      <footer className="py-8 text-center text-xs text-ink-mute">
+        MailBoard · read-only · your data stays in your account
+      </footer>
 
       <EmailPreview message={selected} onClose={() => setSelected(null)} />
     </main>
