@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/api-helpers";
+import { ensureSessionUser, requireSession } from "@/lib/api-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -45,17 +45,26 @@ export async function POST(req: NextRequest) {
   const query = (body.query ?? "").toString();
   const filters = body.filters ? JSON.stringify(body.filters) : "{}";
 
-  const created = await prisma.savedSearch.create({
-    data: { userId: auth.userId, name, query, filters },
-  });
+  try {
+    await ensureSessionUser(auth);
+    const created = await prisma.savedSearch.create({
+      data: { userId: auth.userId, name, query, filters },
+    });
 
-  return NextResponse.json({
-    id: created.id,
-    name: created.name,
-    query: created.query,
-    filters: safeParse(created.filters),
-    createdAt: created.createdAt,
-  });
+    return NextResponse.json({
+      id: created.id,
+      name: created.name,
+      query: created.query,
+      filters: safeParse(created.filters),
+      createdAt: created.createdAt,
+    });
+  } catch (e) {
+    console.error("saved search write failed", e);
+    return NextResponse.json(
+      { error: "Could not save this search. Sign out and sign in again, then retry." },
+      { status: 500 }
+    );
+  }
 }
 
 function safeParse(s: string): unknown {

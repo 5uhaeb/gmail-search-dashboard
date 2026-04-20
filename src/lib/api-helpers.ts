@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Returns { session, accessToken, userId } for an authenticated request,
@@ -47,6 +48,35 @@ export async function requireSession() {
     accessToken: session.accessToken,
     userId: session.user.id,
   } as const;
+}
+
+export async function ensureSessionUser(auth: {
+  userId: string;
+  session: {
+    user?: {
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
+    };
+  };
+}) {
+  const email = auth.session.user?.email;
+  if (!email) throw new Error("Session missing user email");
+
+  await prisma.user.upsert({
+    where: { id: auth.userId },
+    update: {
+      email,
+      name: auth.session.user?.name ?? undefined,
+      image: auth.session.user?.image ?? undefined,
+    },
+    create: {
+      id: auth.userId,
+      email,
+      name: auth.session.user?.name ?? undefined,
+      image: auth.session.user?.image ?? undefined,
+    },
+  });
 }
 
 /** Translate a Google API error into a friendly HTTP response. */

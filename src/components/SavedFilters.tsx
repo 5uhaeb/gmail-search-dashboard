@@ -75,7 +75,10 @@ export default function SavedFilters({
           filters: currentFilters,
         }),
       });
-      if (!r.ok) throw new Error((await r.json()).error ?? r.statusText);
+      if (!r.ok) {
+        const body = await r.json().catch(() => null);
+        throw new Error(body?.error ?? r.statusText ?? "Could not save this search.");
+      }
       setName("");
       await loadSaved();
     } catch (e) {

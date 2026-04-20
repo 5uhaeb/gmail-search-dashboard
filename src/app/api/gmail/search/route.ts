@@ -4,7 +4,7 @@ import { buildGmailQuery } from "@/lib/query-builder";
 import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import type { SearchFilters } from "@/types";
-import { handleGmailError, requireSession } from "@/lib/api-helpers";
+import { ensureSessionUser, handleGmailError, requireSession } from "@/lib/api-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     // was executed (don't pollute history with empty queries).
     if (body.saveToHistory !== false && !body.pageToken && q.trim().length > 0) {
       try {
+        await ensureSessionUser(auth);
         await prisma.searchHistory.create({
           data: {
             userId: auth.userId,
