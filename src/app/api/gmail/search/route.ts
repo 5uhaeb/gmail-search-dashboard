@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchMessages, aggregateDomains } from "@/lib/gmail";
 import { buildGmailQuery } from "@/lib/query-builder";
 import { rateLimit } from "@/lib/rate-limit";
 import type { SearchFilters } from "@/types";
@@ -38,6 +37,7 @@ export async function POST(req: NextRequest) {
     const viewMode = filters.viewMode ?? "messages";
     const q = buildGmailQuery(filters);
 
+    const { searchMessages, aggregateDomains } = await import("@/lib/gmail");
     const result = await searchMessages(auth.accessToken, {
       q,
       pageToken: body.pageToken,
