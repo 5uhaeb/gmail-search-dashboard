@@ -2,6 +2,9 @@ import { google, gmail_v1 } from "googleapis";
 import type { ParsedMessage, MessageDetail, DomainAggregate } from "@/types";
 import { sanitizeEmailHtml, htmlToText } from "./sanitize";
 
+const BATCH_SIZE = 50;
+const LIST_METADATA_HEADERS = ["From", "Subject", "Date"];
+
 /** Build an authenticated Gmail client from a bearer access token. */
 export function gmailClient(accessToken: string): gmail_v1.Gmail {
   const auth = new google.auth.OAuth2();
@@ -140,6 +143,129 @@ export interface SearchOptions {
   viewMode?: "messages" | "threads";
 }
 
+async function getMetadataMessage(
+  gmail: gmail_v1.Gmail,
+  id: string
+): Promise<ParsedMessage> {
+  const detail = await gmail.users.messages.get({
+    userId: "me",
+    id,
+    format: "metadata",
+    metadataHeaders: LIST_METADATA_HEADERS,
+  });
+  return parseMessage(detail.data);
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
+function parseBatchPart(part: string): {
+  contentId?: string;
+  status: number;
+  body?: gmail_v1.Schema$Message;
+} | null {
+  const contentId = part.match(/Content-ID:\s*<?([^>\r\n]+)>?/i)?.[1];
+  const httpIndex = part.search(/HTTP\/1\.[01]\s+\d{3}/i);
+  if (httpIndex < 0) return null;
+
+  const httpPart = part.slice(httpIndex);
+  const status = Number(httpPart.match(/HTTP\/1\.[01]\s+(\d{3})/i)?.[1] ?? 0);
+  const bodyStartMatch = /\r?\n\r?\n/.exec(httpPart);
+  if (!bodyStartMatch) return { contentId, status };
+
+  const bodyText = httpPart.slice(bodyStartMatch.index + bodyStartMatch[0].length).trim();
+  if (!bodyText || status < 200 || status >= 300) return { contentId, status };
+
+  try {
+    return { contentId, status, body: JSON.parse(bodyText) as gmail_v1.Schema$Message };
+  } catch {
+    return { contentId, status };
+  }
+}
+
+async function batchGetMetadataChunk(
+  accessToken: string,
+  ids: string[]
+): Promise<Array<ParsedMessage | null>> {
+  const boundary = `mailboard_batch_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  const query = new URLSearchParams({ format: "metadata" });
+  LIST_METADATA_HEADERS.forEach((h) => query.append("metadataHeaders", h));
+
+  const body =
+    ids
+      .map((id, index) =>
+        [
+          `--${boundary}`,
+          "Content-Type: application/http",
+          `Content-ID: <msg-${index}>`,
+          "",
+          `GET /gmail/v1/users/me/messages/${encodeURIComponent(id)}?${query.toString()} HTTP/1.1`,
+          "",
+        ].join("\r\n")
+      )
+      .join("\r\n") + `\r\n--${boundary}--\r\n`;
+
+  const response = await fetch("https://www.googleapis.com/batch/gmail/v1", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": `multipart/mixed; boundary=${boundary}`,
+    },
+    body,
+  });
+
+  if (!response.ok) throw new Error(`Gmail batch failed: ${response.status}`);
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const responseBoundary = contentType.match(/boundary="?([^=";]+)"?/i)?.[1];
+  if (!responseBoundary) throw new Error("Gmail batch response missing boundary");
+
+  const text = await response.text();
+  const parsed = new Map<number, ParsedMessage>();
+
+  text
+    .split(`--${responseBoundary}`)
+    .map((part) => part.trim())
+    .filter((part) => part && part !== "--")
+    .forEach((part) => {
+      const result = parseBatchPart(part);
+      const indexMatch = result?.contentId?.match(/msg-(\d+)/);
+      if (!result?.body || !indexMatch || result.status < 200 || result.status >= 300) return;
+      parsed.set(Number(indexMatch[1]), parseMessage(result.body));
+    });
+
+  return ids.map((_, index) => parsed.get(index) ?? null);
+}
+
+export async function batchGetMetadata(
+  accessToken: string,
+  ids: string[]
+): Promise<ParsedMessage[]> {
+  if (ids.length === 0) return [];
+
+  const gmail = gmailClient(accessToken);
+  const results: ParsedMessage[] = [];
+
+  for (const idsChunk of chunk(ids, BATCH_SIZE)) {
+    let chunkResults: Array<ParsedMessage | null>;
+    try {
+      chunkResults = await batchGetMetadataChunk(accessToken, idsChunk);
+    } catch {
+      chunkResults = idsChunk.map(() => null);
+    }
+
+    const filled = await Promise.all(
+      chunkResults.map((msg, index) => msg ?? getMetadataMessage(gmail, idsChunk[index]))
+    );
+    results.push(...filled);
+  }
+
+  return results;
+}
+
 export async function searchMessages(
   accessToken: string,
   { q, maxResults = 25, pageToken, viewMode = "messages" }: SearchOptions
@@ -163,7 +289,7 @@ export async function searchMessages(
           userId: "me",
           id: t.id!,
           format: "metadata",
-          metadataHeaders: ["From", "To", "Cc", "Subject", "Date"],
+          metadataHeaders: LIST_METADATA_HEADERS,
         });
         const msgs = detail.data.messages ?? [];
         const latest = msgs[msgs.length - 1] ?? msgs[0];
@@ -193,20 +319,8 @@ export async function searchMessages(
     pageToken: pageToken || undefined,
   });
 
-  const ids = list.data.messages ?? [];
-  // Batch-fetch metadata for each message. Gmail's per-user quota easily handles
-  // small pages in parallel. If you raise maxResults > 50, consider chunking.
-  const results: ParsedMessage[] = await Promise.all(
-    ids.map(async ({ id }) => {
-      const detail = await gmail.users.messages.get({
-        userId: "me",
-        id: id!,
-        format: "metadata",
-        metadataHeaders: ["From", "To", "Cc", "Subject", "Date"],
-      });
-      return parseMessage(detail.data);
-    })
-  );
+  const ids = (list.data.messages ?? []).map(({ id }) => id).filter((id): id is string => !!id);
+  const results = await batchGetMetadata(accessToken, ids);
 
   return {
     messages: results,

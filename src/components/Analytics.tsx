@@ -6,7 +6,7 @@ import type { DomainAggregate, ParsedMessage } from "@/types";
 interface Props {
   messages: ParsedMessage[];
   domains: DomainAggregate[];
-  savedKeywords?: string[]; // raw keyword strings from saved searches
+  savedKeywords?: string[];
 }
 
 export default function Analytics({ messages, domains, savedKeywords = [] }: Props) {
@@ -31,31 +31,27 @@ export default function Analytics({ messages, domains, savedKeywords = [] }: Pro
   if (messages.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Analytics (current page)
-      </h3>
+    <div className="card space-y-4 p-3">
+      <h3 className="text-[10px] font-semibold uppercase tracking-wider text-ink-mute">Analytics</h3>
 
       <section>
-        <div className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">
-          Top sender domains
-        </div>
+        <div className="mb-2 text-xs font-semibold text-ink">Top sender domains</div>
         {domains.length === 0 ? (
-          <p className="text-xs text-slate-500 dark:text-slate-400">No sender data.</p>
+          <p className="text-xs text-ink-mute">No sender data.</p>
         ) : (
-          <ul className="space-y-1.5">
-            {domains.slice(0, 8).map((d: DomainAggregate) => (
-              <li key={d.domain} className="flex items-center gap-2 text-xs">
-                <span className="w-40 truncate text-slate-700 dark:text-slate-300">{d.domain}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          <ul className="space-y-2">
+            {domains.slice(0, 8).map((d: DomainAggregate, index) => (
+              <li key={d.domain} className="text-xs">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate font-medium text-ink">{d.domain}</span>
+                  <span className="font-mono text-[11px] font-semibold tabular-nums text-ink-mute">{d.count}</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full border-cartoon-thin border-ink bg-surface-2">
                   <div
-                    className="h-full bg-brand-500 rounded-full"
+                    className={"h-full " + barColor(index)}
                     style={{ width: `${Math.max(4, (d.count / maxDomain) * 100)}%` }}
                   />
                 </div>
-                <span className="w-8 text-right tabular-nums text-slate-500 dark:text-slate-400">
-                  {d.count}
-                </span>
               </li>
             ))}
           </ul>
@@ -64,14 +60,12 @@ export default function Analytics({ messages, domains, savedKeywords = [] }: Pro
 
       {keywordCounts.length > 0 && (
         <section>
-          <div className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">
-            Matches for saved keywords
-          </div>
+          <div className="mb-2 text-xs font-semibold text-ink">Matches for saved keywords</div>
           <ul className="space-y-1">
             {keywordCounts.slice(0, 8).map((k) => (
               <li key={k.keyword} className="flex items-center justify-between gap-2 text-xs">
-                <span className="truncate font-mono text-slate-700 dark:text-slate-300">{k.keyword}</span>
-                <span className="tabular-nums text-slate-500 dark:text-slate-400">{k.count}</span>
+                <span className="truncate font-mono text-ink">{k.keyword}</span>
+                <span className="font-mono font-semibold tabular-nums text-ink-mute">{k.count}</span>
               </li>
             ))}
           </ul>
@@ -79,4 +73,10 @@ export default function Analytics({ messages, domains, savedKeywords = [] }: Pro
       )}
     </div>
   );
+}
+
+function barColor(index: number) {
+  if (index === 1) return "bg-accent-yellow";
+  if (index === 2) return "bg-accent-red";
+  return "bg-accent-blue";
 }

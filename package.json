@@ -1,11 +1,11 @@
 {
-  "name": "gmail-search-dashboard",
+  "name": "mailboard",
   "version": "1.0.0",
   "private": true,
-  "description": "A personal Gmail search dashboard with OAuth, advanced filters, saved searches, analytics, and CSV/JSON export.",
+  "description": "A personal inbox dashboard with advanced search, saved filters, analytics, and CSV/JSON export.",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
