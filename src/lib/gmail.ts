@@ -1,6 +1,5 @@
 import { google, gmail_v1 } from "googleapis";
 import type { ParsedMessage, MessageDetail, DomainAggregate } from "@/types";
-import { sanitizeEmailHtml, htmlToText } from "./sanitize";
 
 const BATCH_SIZE = 50;
 const LIST_METADATA_HEADERS = ["From", "Subject", "Date"];
@@ -362,6 +361,7 @@ export async function getMessageDetail(
 
   const rawHtml = htmlPart?.body?.data ? decodeBase64Url(htmlPart.body.data) : "";
   const rawText = textPart?.body?.data ? decodeBase64Url(textPart.body.data) : "";
+  const { sanitizeEmailHtml, htmlToText } = await import("./sanitize");
 
   const safeHtml = rawHtml
     ? sanitizeEmailHtml(rawHtml, false)
